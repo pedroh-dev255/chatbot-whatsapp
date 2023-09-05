@@ -1,0 +1,33 @@
+{
+  "name": "chatbot-whatsapp",
+  "version": "1.0.0",
+  "description": "Chat bot para whatsapp",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node ./dist/index.js",
+    "start:prod": "tsc && node dist/index.js",
+    "start:dev": "tsx watch src/index.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pedroh-dev255/chatbot-whatsapp.git"
+  },
+  "author": "pedroh-dev255",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/pedroh-dev255/chatbot-whatsapp/issues"
+  },
+  "homepage": "https://github.com/pedroh-dev255/chatbot-whatsapp#readme",
+  "devDependencies": {
+    "@types/node": "^20.5.9",
+    "@types/qrcode-terminal": "^0.12.0",
+    "tsx": "^3.12.8",
+    "typescript": "^5.2.2"
+  },
+  "dependencies": {
+    "qrcode-terminal": "^0.12.0",
+    "whatsapp-web.js": "^1.22.1"
+  }
+}
