@@ -19,7 +19,8 @@ function configureBotCommands(client) {
 function sendHelpMessage(sender, client) {
   const helpMessage = `👾: *Sistemas Integrados no Bot*:
   !ping - Verifica Latencia do servidor.
-  !lembrar - Inicia sistema de lembrete.
+  !lembrar - Inicia sistema de lembrete sem data definida.
+  !lembrar hoje - Inicia sistema de lembrete para o dia atual.
   `;
   client.sendMessage(sender, helpMessage);
 }
