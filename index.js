@@ -21,28 +21,33 @@ client.on('message', async message => {
     const sender = message.from;
     const body = message.body.toLowerCase();
 
-    if (body === '!ping') {
+    if(body === '!help'){
+        client.sendMessage(sender, `👾: Sistemas Integrados no Bot: `);
+        client.sendMessage(sender, `👾: !ping - Verifica Latencia do servidor.`);
+        client.sendMessage(sender, `👾: !lembrar - Inicia sistema de lembrete.`);
+
+    }else if (body === '!ping') {
         const startTime = Date.now();
 
-        client.sendMessage(sender, 'Calculando ping...').then(sentMessage => {
+        client.sendMessage(sender, '👾: Pong!').then(sentMessage => {
             const endTime = Date.now();
             const latency = endTime - startTime;
 
-            client.sendMessage(sender, `Pong! Latencia: ${latency}ms`);
+            client.sendMessage(sender, `👾: ${latency}ms`);
         });
     } else if (body === '!lembrar') {
         const chat = await message.getChat();
         const reminderText = await askForReminderText(chat, sender);
 
         if (!reminderText) {
-            client.sendMessage(sender, 'Lembrete cancelado.');
+            client.sendMessage(sender, '👾: Lembrete cancelado.');
             return;
         }
 
         const reminderTime = await askForReminderTime(chat, sender);
 
         if (!reminderTime) {
-            client.sendMessage(sender, 'Lembrete cancelado.');
+            client.sendMessage(sender, '👾: Lembrete cancelado.');
             return;
         }
 
@@ -76,7 +81,7 @@ async function askForReminderTime(chat, sender) {
     }
 
     if (!/^([01]\d|2[0-3]):([0-5]\d)$/.test(response)) {
-        await client.sendMessage(sender, 'Formato de horário inválido. Use o formato HH:mm.');
+        await client.sendMessage(sender, '👾: Formato de horário inválido. Use o formato HH:mm.');
         return askForReminderTime(chat, sender);
     }
 
@@ -103,7 +108,7 @@ function scheduleReminder(sender, text, time) {
     rule.minute = parseInt(minutes);
 
     const job = schedule.scheduleJob(rule, () => {
-        client.sendMessage(sender, `Lembrete: ${text}`);
+        client.sendMessage(sender, `👾 Lembrete: ${text}`);
     });
 
     // Armazena o lembrete programado
