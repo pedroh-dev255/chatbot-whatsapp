@@ -10,7 +10,7 @@ function configureBotCommands(client) {
       sendHelpMessage(sender, client);
     } else if (body === '!ping') {
       handlePing(sender, client);
-    } else if (body === '!lembrar') {
+    } else if (body.startsWith('!lembrar')) {
       handleLembrar(message, sender, client);
     }
   });
@@ -18,8 +18,8 @@ function configureBotCommands(client) {
 
 function sendHelpMessage(sender, client) {
   const helpMessage = `👾: *Sistemas Integrados no Bot*:
-👾: !ping - Verifica Latencia do servidor.
-👾: !lembrar - Inicia sistema de lembrete.
+  !ping - Verifica Latencia do servidor.
+  !lembrar - Inicia sistema de lembrete.
   `;
   client.sendMessage(sender, helpMessage);
 }
@@ -37,21 +37,39 @@ function handlePing(sender, client) {
 
 async function handleLembrar(message, sender, client) {
   const chat = await message.getChat();
-  const reminderText = await askForReminderText(chat, sender, client);
+  const body = message.body.toLowerCase();
 
-  if (!reminderText) {
-    client.sendMessage(sender, '👾: Lembrete cancelado.');
-    return;
+  if (body.includes('hoje')) {
+    const reminderTime = await askForReminderTime(chat, sender, client);
+    if (!reminderTime) {
+      client.sendMessage(sender, '👾: Lembrete cancelado.');
+      return;
+    }
+
+    scheduleReminder(sender, body.replace('!lembrar hoje', ''), reminderTime, client);
+  } else {
+    const reminderText = await askForReminderText(chat, sender, client);
+    if (!reminderText) {
+      client.sendMessage(sender, '👾: Lembrete cancelado.');
+      return;
+    }
+
+    const reminderDate = await askForReminderDate(chat, sender, client);
+
+    if (!reminderDate) {
+      client.sendMessage(sender, '👾: Lembrete cancelado.');
+      return;
+    }
+
+    const reminderTime = await askForReminderTime(chat, sender, client);
+
+    if (!reminderTime) {
+      client.sendMessage(sender, '👾: Lembrete cancelado.');
+      return;
+    }
+
+    scheduleReminder(sender, reminderText, reminderDate + ' ' + reminderTime, client);
   }
-
-  const reminderTime = await askForReminderTime(chat, sender, client);
-
-  if (!reminderTime) {
-    client.sendMessage(sender, '👾: Lembrete cancelado.');
-    return;
-  }
-
-  scheduleReminder(sender, reminderText, reminderTime, client);
 }
 
 async function askForReminderText(chat, sender, client) {
@@ -61,6 +79,23 @@ async function askForReminderText(chat, sender, client) {
 
   if (response.toLowerCase() === 'cancelar') {
     return null;
+  }
+
+  return response;
+}
+
+async function askForReminderDate(chat, sender, client) {
+  await client.sendMessage(sender, '👾: Em que data deseja ser lembrado? (Responda com a data no formato DD/MM/AAAA ou "cancelar" para cancelar)');
+
+  const response = await waitForUserResponse(sender, client);
+
+  if (response.toLowerCase() === 'cancelar') {
+    return null;
+  }
+
+  if (!/^\d{2}\/\d{2}\/\d{4}$/.test(response)) {
+    await client.sendMessage(sender, '👾: Formato de data inválido. Use o formato DD/MM/AAAA.');
+    return askForReminderDate(chat, sender, client);
   }
 
   return response;
