@@ -131,3 +131,5 @@ dist
 
 # whatsapp session
 .wwebjs_cache
+.node-persist
+lembretes.json

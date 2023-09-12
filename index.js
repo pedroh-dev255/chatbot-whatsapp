@@ -1,40 +1,38 @@
-const { Client, NoAuth } = require('whatsapp-web.js');
+const { Client } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
-const { configureBotCommands } = require('./src/comandos');
-const storage = require('node-persist');
+const { processarComando } = require('./src/comandos.js'); // Importe o módulo de comandos
 
-const client = new Client({
-  authStrategy: new NoAuth(),
+// Crie um novo cliente WhatsApp
+const client = new Client();
+
+// Evento que é disparado quando a sessão é autenticada
+client.on('authenticated', (session) => {
+  console.log('Sessão autenticada com sucesso!');
+  // Você pode salvar a sessão para evitar a autenticação em futuras execuções
 });
 
-client.on('qr', qr => {
-  qrcode.generate(qr, { small: true });
+// Evento que é disparado quando o QR code é gerado
+client.on('qr', (qrCode) => {
+  // Exibe o QR code no terminal
+  qrcode.generate(qrCode, { small: true });
 });
 
-// Load the saved session if available
-storage.init().then(async () => {
-  const sessionData = await storage.getItem('whatsapp-session');
-  if (sessionData) {
-    client.applySession(sessionData);
-  }
-
-  client.on('ready', () => {
-    console.log('Client is ready!');
-  });
-
-  client.initialize();
-
-  configureBotCommands(client);
+// Evento que é disparado quando a sessão é pronta para ser usada
+client.on('ready', () => {
+  console.log('Sessão pronta para uso!');
+  // Agora você pode começar a interagir com o WhatsApp aqui
 });
 
-// Save the authentication session when it changes
-client.on('authenticated', session => {
-  storage.setItem('whatsapp-session', session);
+// Evento que é disparado quando ocorre um erro
+client.on('auth_failure', (msg) => {
+  console.error('Falha na autenticação:', msg);
 });
 
-// Save the authentication session when it logs out
-client.on('disconnected', reason => {
-  if (reason === 'disconnected' || reason === 'replaced') {
-    storage.removeItem('whatsapp-session');
-  }
+// Evento que é disparado quando uma mensagem é recebida
+client.on('message', (message) => {
+  // Processa comandos
+  processarComando(client, message);
 });
+
+// Inicie a conexão com o WhatsApp
+client.initialize();
