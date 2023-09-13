@@ -55,7 +55,6 @@ function excluirLembrete(usuario, numero) {
   }
 }
 
-// Função para verificar e enviar lembretes agendados
 function verificarLembretes(client) {
   setInterval(() => {
     const agora = new Date();
@@ -63,12 +62,10 @@ function verificarLembretes(client) {
       const lista = lembretes[usuario];
       for (let i = 0; i < lista.length; i++) {
         const lembrete = lista[i];
-        const dataHoraLembrete = new Date(
-          `${lembrete.data} ${lembrete.hora}`
-        );
+        const dataHoraLembrete = new Date(`${lembrete.data} ${lembrete.hora}`);
         if (agora >= dataHoraLembrete) {
           // Envie o lembrete para o usuário
-          client.sendMessage(usuario, `Lembrete: ${lembrete.lembrete}`);
+          enviarLembrete(client, usuario, lembrete.lembrete);
           // Remova o lembrete da lista
           lista.splice(i, 1);
           i--; // Decrementa para continuar na próxima posição
@@ -77,7 +74,11 @@ function verificarLembretes(client) {
     }
     // Salvar a lista atualizada no arquivo
     fs.writeFileSync('lembretes.json', JSON.stringify(lembretes));
-  }, 60000); // Verifica a cada minuto
+  }, 10000); // Verifica a cada 10 segundos
+}
+
+async function enviarLembrete(client, usuario, lembrete) {
+  await client.sendMessage(usuario, `Lembrete: ${lembrete}`);
 }
 
 module.exports = {

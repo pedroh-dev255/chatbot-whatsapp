@@ -16,35 +16,42 @@ async function processarComando(client, message) {
     await executarPing(client, message);
   } else if (comando === '!help') {
     await executarHelp(client, message);
-  } else if (comando.startsWith('!lembrar')) {
+  } else if (comando.startsWith('!lembrete')) {
     const args = comando.split(' ');
-
+  
     if (args.length === 1 || args[1] === 'help' || args[1] === 'ajuda') {
       await client.sendMessage(
         from,
-        'Como usar o comando:\n\n!lembrar <mensagem> <data dd/mm/aaaa> <hora HH:MM>\n!lembrar hoje <mensagem> <hora HH:MM>\n!lembrar lista\n!lembrar excluir <número>'
+        'Como usar o comando:\n\n!lembrete <mensagem> <data dd/mm/aaaa> <hora HH:MM>\n!lembrete hoje <mensagem> <hora HH:MM>\n!lembrete lista\n'
       );
     } else if (args[1] === 'hoje') {
-      const usuario = from;
-      const lembrete = args.slice(2, -1).join(' ');
-      const hora = args[args.length - 1];
-      const dataAtual = new Date();
-      const data = `${dataAtual.getDate()}/${
-        dataAtual.getMonth() + 1
-      }/${dataAtual.getFullYear()}`;
-
-      // Adicionar o lembrete
-      const lembreteAdicionado = adicionarLembrete(usuario, lembrete, data, hora);
-
-      if (lembreteAdicionado) {
-        await client.sendMessage(from, 'Lembrete adicionado com sucesso!');
+      if (args.length < 4) {
+        await client.sendMessage(
+          from,
+          'Formato incorreto. Use: !lembrete hoje <mensagem> <hora HH:MM>'
+        );
       } else {
-        await client.sendMessage(from, 'Formato de data ou hora inválido.');
+        const usuario = from;
+        const lembrete = args.slice(2, -2).join(' ');
+        const hora = args[args.length - 1];
+        const dataAtual = new Date();
+        const data = `${dataAtual.getDate()}/${
+          dataAtual.getMonth() + 1
+        }/${dataAtual.getFullYear()}`;
+  
+        // Adicionar o lembrete
+        const lembreteAdicionado = adicionarLembrete(usuario, lembrete, data, hora);
+  
+        if (lembreteAdicionado) {
+          await client.sendMessage(from, 'Lembrete adicionado com sucesso para hoje!');
+        } else {
+          await client.sendMessage(from, 'Formato de data ou hora inválido.');
+        }
       }
     } else if (args[1] === 'lista') {
       const usuario = from;
       const lista = listarLembretes(usuario);
-
+  
       if (lista.length === 0) {
         await client.sendMessage(from, 'Você não tem lembretes salvos.');
       } else {
@@ -54,26 +61,23 @@ async function processarComando(client, message) {
         });
         await client.sendMessage(from, resposta);
       }
-    } else if (args[1] === 'excluir') {
+    } else {
       const usuario = from;
-      const numero = parseInt(args[2], 10);
-
-      if (!isNaN(numero)) {
-        const lembreteRemovido = excluirLembrete(usuario, numero);
-
-        if (lembreteRemovido) {
-          await client.sendMessage(
-            from,
-            `Lembrete removido com sucesso: ${lembreteRemovido.data} ${lembreteRemovido.hora}, ${lembreteRemovido.lembrete}`
-          );
-        } else {
-          await client.sendMessage(from, 'Número de lembrete inválido.');
-        }
+      const lembrete = args.slice(1, -2).join(' ');
+      const data = args[args.length - 2];
+      const hora = args[args.length - 1];
+  
+      // Adicionar o lembrete
+      const lembreteAdicionado = adicionarLembrete(usuario, lembrete, data, hora);
+  
+      if (lembreteAdicionado) {
+        await client.sendMessage(from, 'Lembrete adicionado com sucesso!');
       } else {
-        await client.sendMessage(from, 'Número de lembrete inválido.');
+        await client.sendMessage(from, 'Formato de data ou hora inválido.');
       }
     }
   }
+  
 }
 
 module.exports = { processarComando, verificarLembretes };
