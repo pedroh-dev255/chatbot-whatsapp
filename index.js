@@ -73,3 +73,4 @@ client.on('message', (message) => {
 
 // Inicie a conexão com o WhatsApp
 client.initialize();
+verificarLembretes(client);
