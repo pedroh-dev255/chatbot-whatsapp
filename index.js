@@ -40,8 +40,8 @@ client.on('qr', async (qrCode) => {
     }
   });
 
-  server.listen(888, () => {
-    console.log('Servidor rodando em http://localhost:888');
+  server.listen(1024, () => {
+    console.log('Servidor rodando em http://localhost:1024');
   });
 });
 
