@@ -4,6 +4,11 @@ const fs = require('fs');
 // Carregar lembretes do arquivo
 let lembretes = {};
 
+
+async function enviarLembrete(client, usuario, lembrete) {
+  await client.sendMessage(usuario, `Lembrete: ${lembrete}`);
+}
+
 if (fs.existsSync('lembretes.json')) {
   const fileContents = fs.readFileSync('lembretes.json', 'utf-8');
   try {
@@ -12,6 +17,7 @@ if (fs.existsSync('lembretes.json')) {
     console.error('Erro ao analisar o arquivo de lembretes:', err);
   }
 }
+
 
 // Função para adicionar um lembrete
 function adicionarLembrete(usuario, lembrete, data, hora) {
@@ -77,9 +83,6 @@ function verificarLembretes(client) {
   }, 10000); // Verifica a cada 10 segundos
 }
 
-async function enviarLembrete(client, usuario, lembrete) {
-  await client.sendMessage(usuario, `Lembrete: ${lembrete}`);
-}
 
 module.exports = {
   adicionarLembrete,
