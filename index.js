@@ -1,13 +1,11 @@
 const { Client } = require('whatsapp-web.js');
 const { processarComando } = require('./src/comandos.js');
-const { verificarLembretes } = require('./src/comandos/lembretes.js');
 const qrcode = require('qrcode');
 const express = require('express');
 const http = require('http');
 
 const app = express();
 let server;
-
 const client = new Client();
 
 client.on('qr', async (qrCode) => {
@@ -22,11 +20,6 @@ client.on('qr', async (qrCode) => {
 
   // Configure o servidor web e inicie somente quando o QR code for gerado
   server = http.createServer(app);
-  app.get('/', (req, res) => {
-    res.writeHead(200, { 'Content-Type': 'text/html' });
-    res.write('<img src="/qrcode" alt="QR Code">');
-    res.end();
-  });
 
   app.get('/qrcode', async (req, res) => {
     try {
@@ -41,7 +34,7 @@ client.on('qr', async (qrCode) => {
   });
 
   server.listen(1024, () => {
-    console.log('Servidor rodando em http://localhost:1024');
+    console.log('Servidor rodando em http://localhost:1024/qrcode');
   });
 });
 
@@ -59,7 +52,6 @@ client.on('authenticated', (session) => {
 client.on('ready', () => {
   console.log('Sessão pronta para uso!');
   // Agora você pode começar a interagir com o WhatsApp aqui
-  verificarLembretes(client);
 });
 
 client.on('auth_failure', (msg) => {
@@ -73,4 +65,3 @@ client.on('message', (message) => {
 
 // Inicie a conexão com o WhatsApp
 client.initialize();
-verificarLembretes(client);

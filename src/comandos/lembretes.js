@@ -1,92 +1,88 @@
-// src/comandos/lembretes.js
-const fs = require('fs');
+const schedule = require('node-schedule');
+const reminders = {};
 
-// Carregar lembretes do arquivo
-let lembretes = {};
+async function askForReminderText(client, chat, sender) {
+  await client.sendMessage(sender, '👾: O que deseja ser lembrado? (Responda com o texto do lembrete ou "cancelar" para cancelar)');
 
-
-async function enviarLembrete(client, usuario, lembrete) {
-  await client.sendMessage(usuario, `Lembrete: ${lembrete}`);
-}
-
-if (fs.existsSync('lembretes.json')) {
-  const fileContents = fs.readFileSync('lembretes.json', 'utf-8');
-  try {
-    lembretes = JSON.parse(fileContents);
-  } catch (err) {
-    console.error('Erro ao analisar o arquivo de lembretes:', err);
-  }
-}
-
-
-// Função para adicionar um lembrete
-function adicionarLembrete(usuario, lembrete, data, hora) {
-  if (!lembretes[usuario]) {
-    lembretes[usuario] = [];
-  }
-
-  // Validar a data e hora
-  const dataRegex = /^(\d{2}\/\d{2}\/\d{4})$/;
-  const horaRegex = /^(\d{2}:\d{2})$/;
-  if (!data.match(dataRegex) || !hora.match(horaRegex)) {
-    return false; // Não salva lembrete inválido
-  }
-
-  lembretes[usuario].push({ lembrete, data, hora });
-
-  // Salvar a lista de lembretes no arquivo
-  fs.writeFileSync('lembretes.json', JSON.stringify(lembretes));
-  return true; // Lembrete adicionado com sucesso
-}
-
-// Função para listar os lembretes de um usuário
-function listarLembretes(usuario) {
-  const lista = lembretes[usuario] || [];
-  return lista;
-}
-
-// Função para excluir um lembrete de um usuário
-function excluirLembrete(usuario, numero) {
-  const lista = lembretes[usuario] || [];
-
-  if (numero >= 1 && numero <= lista.length) {
-    const lembreteRemovido = lista.splice(numero - 1, 1)[0];
-    // Atualizar a lista de lembretes do usuário
-    lembretes[usuario] = lista;
-    // Salvar a lista atualizada no arquivo
-    fs.writeFileSync('lembretes.json', JSON.stringify(lembretes));
-    return lembreteRemovido;
-  } else {
-    return null;
-  }
-}
-
-function verificarLembretes(client) {
-  setInterval(() => {
-    const agora = new Date();
-    for (const usuario in lembretes) {
-      const lista = lembretes[usuario];
-      for (let i = 0; i < lista.length; i++) {
-        const lembrete = lista[i];
-        const dataHoraLembrete = new Date(`${lembrete.data} ${lembrete.hora}`);
-        if (agora >= dataHoraLembrete) {
-          // Envie o lembrete para o usuário
-          enviarLembrete(client, usuario, lembrete.lembrete);
-          // Remova o lembrete da lista
-          lista.splice(i, 1);
-          i--; // Decrementa para continuar na próxima posição
-        }
+  return new Promise((resolve) => {
+    client.on('message', function listener(message) {
+      if (message.from === sender) {
+        resolve(message.body);
+        client.removeListener('message', listener);
       }
-    }
-    // Salvar a lista atualizada no arquivo
-    fs.writeFileSync('lembretes.json', JSON.stringify(lembretes));
-  }, 10000); // Verifica a cada 10 segundos
+    });
+  });
 }
 
+async function askForReminderDateTime(client, chat, sender) {
+  await client.sendMessage(sender, '👾: Quando deseja ser lembrado? (Responda com a data no formato DD/MM/YYYY e a hora no formato HH:mm ou "cancelar" para cancelar)');
+
+  return new Promise((resolve) => {
+    client.on('message', function listener(message) {
+      if (message.from === sender) {
+        resolve(message.body);
+        client.removeListener('message', listener);
+        client.sendMessage(sender, '👍 Lembrete agendado com sucesso!');
+      }
+    });
+  });
+}
+
+// Função para aguardar a resposta do usuário de maneira síncrona
+async function waitForUserResponse(client, sender) {
+  return new Promise((resolve) => {
+    client.on('message', function listener(message) {
+      if (message.from === sender) {
+        resolve(message.body);
+        client.removeListener('message', listener);
+      }
+    });
+  });
+}
+
+async function scheduleReminder(client, sender, text, dateTime) {
+  const [date, time] = dateTime.split(' ');
+  const [day, month, year] = date.split('/');
+  const [hours, minutes] = time.split(':');
+
+  const rule = new schedule.RecurrenceRule();
+  rule.year = parseInt(year);
+  rule.month = parseInt(month) - 1; // Mês começa em 0 (janeiro é 0, fevereiro é 1, etc.)
+  rule.date = parseInt(day);
+  rule.hour = parseInt(hours);
+  rule.minute = parseInt(minutes);
+
+  const job = schedule.scheduleJob(rule, () => {
+    client.sendMessage(sender, `👾 Lembrete: ${text}`);
+    // Enviar mensagem de confirmação
+    
+  });
+
+  // Armazena o lembrete programado
+  reminders[sender] = job;
+}
+
+async function processarLembrete(client, message) {
+  const sender = message.from;
+  const chat = await message.getChat();
+
+  const reminderText = await askForReminderText(client, chat, sender);
+
+  if (!reminderText) {
+    client.sendMessage(sender, '👾: Lembrete cancelado.');
+    return;
+  }
+
+  const reminderTime = await askForReminderDateTime(client, chat, sender);
+
+  if (!reminderTime) {
+    client.sendMessage(sender, '👾: Lembrete cancelado.');
+    return;
+  }
+
+  scheduleReminder(client, sender, reminderText, reminderTime);
+}
 
 module.exports = {
-  adicionarLembrete,
-  listarLembretes,
-  excluirLembrete,
-  verificarLembretes,
+  processarLembrete,
 };
